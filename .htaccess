@@ -1,0 +1,145 @@
+# ====================================================================
+# FOODS SAAS v2.0.0 — CONFIGURAÇÃO MILITAR .HTACCESS DE ALTA SEGURANÇA
+# ====================================================================
+# Proteção contra SQL Injection, XSS, RFI/LFI, CSRF, Clickjacking,
+# Sniffing, Path Traversal, Bad Bots, Scanners e Acesso a Arquivos Sensíveis
+# ====================================================================
+
+# --------------------------------------------------------------------
+# 1. DESATIVAÇÃO DE RECURSOS PERIGOSOS E LISTAGEM DE DIRETÓRIO
+# --------------------------------------------------------------------
+Options -Indexes -ExecCGI -Includes
+ServerSignature Off
+
+# --------------------------------------------------------------------
+# 2. BLOQUEIO DE MÉTODOS HTTP MALICIOSOS / NÃO AUTORIZADOS
+# --------------------------------------------------------------------
+<LimitExcept GET POST PUT DELETE PATCH OPTIONS HEAD>
+  Order Deny,Allow
+  Deny from all
+</LimitExcept>
+
+# --------------------------------------------------------------------
+# 3. BLOQUEIO DE ARQUIVOS OCULTOS, DOTFILES E ARQUIVOS SENSÍVEIS
+# --------------------------------------------------------------------
+<FilesMatch "^\.">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "(^#.*#|\.(bak|conf|dist|fla|in[ci]|log|psd|sh|sql|sw[op]|env.*|git.*|yml|yaml|ts|tsx|md|lock)|Dockerfile|docker-compose.*|package.*|tsconfig.*|metadata.json)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# --------------------------------------------------------------------
+# 4. CABEÇALHOS MILITARES DE SEGURANÇA (SECURITY HEADERS)
+# --------------------------------------------------------------------
+<IfModule mod_headers.c>
+  # Forçar HTTPS com HSTS (2 anos de validade com subdomínios e preload)
+  Header set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" env=HTTPS
+
+  # Prevenir Clickjacking e ataques de iframes não autorizados
+  Header set X-Frame-Options "SAMEORIGIN"
+
+  # Prevenir Sniffing de tipo MIME
+  Header set X-Content-Type-Options "nosniff"
+
+  # Prevenir execução de scripts refletidos (XSS Filter)
+  Header set X-XSS-Protection "1; mode=block"
+
+  # Política de Referência estrita para proteção de privacidade
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Restrição de recursos do navegador e permissões de hardware
+  Header set Permissions-Policy "geolocation=(self), microphone=(), camera=(), payment=(self), usb=()"
+
+  # Política de Segurança de Conteúdo (CSP)
+  Header set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src 'self' data: blob: https: http:; connect-src 'self' https: wss:; font-src 'self' https: data:;"
+
+  # Impedir vazamento de políticas cross-domain
+  Header set X-Permitted-Cross-Domain-Policies "none"
+  Header set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+  Header set Cross-Origin-Resource-Policy "cross-origin"
+
+  # Remover cabeçalhos que revelam a tecnologia interna do servidor
+  Header unset X-Powered-By
+  Header unset Server
+</IfModule>
+
+# --------------------------------------------------------------------
+# 5. MOTOR DE REESCRITA E DEFESA ATIVA CONTRA ATAQUES WEB
+# --------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # A. BLOQUEIO DE USER-AGENTS MALICIOSOS E SCANNERS DE VULNERABILIDADE
+  RewriteCond %{HTTP_USER_AGENT} (sqlmap|nikto|dirbuster|wpscan|masscan|havij|acunetix|nessus|nmap|openvas|netsparker|zgrab|gobuster|hydra|burpcoll|fuzzer|morfeus|flicky|libwww|python-urllib|perl|curl/|wget) [NC,OR]
+  RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
+  RewriteCond %{HTTP_USER_AGENT} (casper|clshttp|clshttp|cmsworldmap|diavol|dotbot|ezooms|flicky|harvest|kmccrew|loader|miner|pagepeeker|planetwork|proximic|purebot|pycurl|scan|sistrix|skygrid|sucker|turnitin|vikspider|winhttp|xxp) [NC]
+  RewriteRule ^.*$ - [F,L]
+
+  # B. PROTEÇÃO CONTRA SQL INJECTION (SQLi)
+  RewriteCond %{QUERY_STRING} (concat.*\(|union.*select|cast.*\(|declare.*@|exec\(|execute\(|drop.*table|insert.*into|benchmark\(|waitfor.*delay|select.*from|information_schema|sys\.databases|pg_sleep|select.*version) [NC,OR]
+  RewriteCond %{QUERY_STRING} (\;|<|>|'|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+  RewriteCond %{QUERY_STRING} (sp_executesql|master\.\.xp_|sysprocesses|sysmessages) [NC]
+  RewriteRule ^.*$ - [F,L]
+
+  # C. PROTEÇÃO CONTRA CROSS-SITE SCRIPTING (XSS)
+  RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
+  RewriteCond %{QUERY_STRING} (javascript:|vbscript:|onload=|onerror=|onclick=|document\.cookie|document\.location|window\.location) [NC,OR]
+  RewriteCond %{QUERY_STRING} (base64_encode.*\(|base64_decode.*\(|globals|mosconfig_) [NC]
+  RewriteRule ^.*$ - [F,L]
+
+  # D. PROTEÇÃO CONTRA DIRECTORY TRAVERSAL, LFI E RFI
+  RewriteCond %{QUERY_STRING} (\.\./|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f|%2e%2e%5c) [NC,OR]
+  RewriteCond %{QUERY_STRING} (boot\.ini|etc/passwd|proc/self|cmd\.exe|powershell\.exe) [NC,OR]
+  RewriteCond %{QUERY_STRING} (http|https|ftp|php)\:// [NC]
+  RewriteRule ^.*$ - [F,L]
+
+  # E. PROTEÇÃO DE ROTAS DA API E ARQUIVOS ESTÁTICOS
+  # Não reescrever chamadas para a API REST (/api/*)
+  RewriteRule ^api/ - [L]
+
+  # F. ROTEAMENTO SPA (REACT VITE)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# --------------------------------------------------------------------
+# 6. COMPRESSÃO DE ALTO DESEMPENHO (GZIP / DEFLATE)
+# --------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml application/rss+xml image/svg+xml
+</IfModule>
+
+# --------------------------------------------------------------------
+# 7. POLÍTICA DE CACHE DE RECURSOS ESTÁTICOS
+# --------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+
