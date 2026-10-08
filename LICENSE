@@ -1,21 +1,100 @@
-MIT License
+# FoodS Commercial Use & Attribution License FCA
 
 Copyright (c) 2026 FoodS SaaS
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## 1. Copyright and Ownership
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The FoodS software, including its original source code, architecture, documentation, visual identity, and original components, is protected by applicable copyright laws.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Copyright and intellectual property rights in the original FoodS source code remain with the original copyright holder, FoodS SaaS, unless expressly transferred through a separate written agreement.
+
+This license does not constitute a transfer of ownership or copyright.
+
+## 2. Permission
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of the FoodS software and associated documentation files (the "Software"), to use, copy, modify, adapt, and distribute the Software, including modified versions, for personal, commercial, educational, or business purposes.
+
+Commercial use is expressly permitted.
+
+This includes, without limitation:
+
+- Operating the Software as a hosted SaaS service;
+- Selling subscriptions or access to services powered by the Software;
+- Installing and configuring the Software for restaurants, businesses, or other customers;
+- Selling commercial installations or copies of the Software;
+- Modifying and adapting the Software for specific customers or business requirements;
+- Incorporating modified portions of the Software into commercial solutions.
+
+## 3. Mandatory Copyright and License Preservation
+
+Any distribution, publication, commercial sale, installation package, source-code distribution, or substantial redistribution of the Software or a derivative work based on the Software must retain the original FoodS SaaS copyright notice and this license.
+
+The following copyright notice must not be removed, altered, hidden, or replaced:
+
+> Copyright (c) 2026 FoodS SaaS
+
+The original copyright and license notices must remain reasonably accessible within the distributed Software.
+
+A distributor may add its own copyright notices for original modifications or independently created components, but such notices must not remove, replace, or falsely represent the original FoodS SaaS copyright.
+
+## 4. No Claim of Original Authorship
+
+Permission to modify, distribute, sell, or commercially exploit the Software does not grant permission to represent the original FoodS SaaS source code as independently created software.
+
+No person or organization may intentionally represent the original FoodSaaS code as their own original creation or claim authorship of the original portions of the Software.
+
+## 5. Commercial Resale
+
+Commercial resale is permitted.
+
+A person or company may sell:
+
+- Subscriptions;
+- Hosted access;
+- Installations;
+- Customized versions;
+- Commercial copies;
+- Services based on the Software;
+- Solutions incorporating the Software.
+
+However, commercial resale does not transfer ownership of the original FoodS SaaS copyright or intellectual property.
+
+The seller is responsible for clearly maintaining the original FoodS SaaS copyright and license notices as required by this license.
+
+## 6. Modifications
+
+Modification of the Software is permitted.
+
+Modifications may be made for personal, commercial, or customer-specific purposes.
+
+Copyright notices relating to original modifications may be added by their respective authors. However, original FoodS SaaS copyright notices may not be removed or replaced.
+
+## 7. Trademark and Brand
+
+This license does not grant permission to use the FoodS name, logo, trademarks, trade dress, domain names, or other brand assets to imply official affiliation, endorsement, sponsorship, or ownership without separate authorization.
+
+Permission to use the source code does not automatically grant permission to use the FoodS brand.
+
+## 8. Violation of the License
+
+Any intentional removal, alteration, concealment, or replacement of the original FoodS SaaS copyright notice or this license, where required by this license, constitutes a violation of the terms under which the Software is made available.
+
+Upon violation, the copyright holder may pursue any remedies available under applicable law, including requesting cessation of unauthorized use, distribution, or commercialization and seeking applicable judicial remedies, damages, or other relief where legally available.
+
+Nothing in this section limits any rights or remedies available to the copyright holder under applicable copyright or other intellectual property laws.
+
+## 9. No Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+## 10. Acceptance
+
+By copying, modifying, distributing, installing, commercially exploiting, or otherwise using the Software under this license, the user agrees to comply with the terms of this license.
+
+---
+
+Copyright (c) 2026 FoodS SaaS
+
+All rights reserved except for the permissions expressly granted by this license.
