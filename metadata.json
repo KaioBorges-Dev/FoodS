@@ -1,7 +1,8 @@
 {
   "name": "FoodS",
   "autor": "KaioBorges-dev - @eukaioborges",
-  "github": "https://github.com/KaioBorges-Dev/foodsaas"
+  "site": "https://dev.kaioborges.com.br",
+  "github": "https://github.com/KaioBorges-Dev/foodsaas",
   "description": "Plataforma SaaS profissional de gestão e operação para restaurantes, lanchonetes, bares e dark kitchens.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

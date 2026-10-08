@@ -254,10 +254,10 @@ Todas as variáveis devem ser definidas no arquivo `.env` localizado na raiz do 
 
 ---
 
-#### 4. InfinityPay (Infinity Handle & Checkout)
-1. Acesse o painel da [InfinitePay](https://www.infinitepay.io/).
-2. Acesse a área de desenvolvedores / integrações.
-3. Copie sua **API Key** e seu identificador **Handle** ➔ Coloque em `INFINITYPAY_API_KEY` e `INFINITYPAY_HANDLE`.
+#### 4. InfinityPay (Infinity Handle & Checkout Integrado)
+1. Acesse sua conta na [InfinitePay](https://www.infinitepay.io/) ou o aplicativo oficial.
+2. Copie apenas a sua **InfiniteTag / Handle** (ex: `$seurestaurante`).
+3. Coloque em `INFINITYPAY_HANDLE` no `.env` ou diretamente no painel em **Configurações > Pagamentos > InfinityPay** (não é necessário configurar webhook ou chaves adicionais).
 
 ---
 
