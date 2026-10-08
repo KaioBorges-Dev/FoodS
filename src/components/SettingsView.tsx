@@ -536,18 +536,25 @@ export const SettingsView: React.FC = () => {
     e.preventDefault();
     try {
       if (editingUser.id) {
-        await apiFetch(`/users/profiles/${editingUser.id}`, {
+        const updated = await apiFetch<Profile>(`/users/profiles/${editingUser.id}`, {
           method: 'PUT',
           body: JSON.stringify(editingUser),
         });
+        if (updated) {
+          setProfiles(prev => prev.map(p => p.id === editingUser.id ? updated : p));
+        }
       } else {
-        await apiFetch('/users/profiles', {
+        const created = await apiFetch<Profile>('/users/profiles', {
           method: 'POST',
           body: JSON.stringify(editingUser),
         });
+        if (created) {
+          setProfiles(prev => [...prev, created]);
+        }
       }
+      setEditingUser({});
       setUserViewMode('LIST');
-      loadAllConfigurations();
+      await loadAllConfigurations();
       showSuccessFeedback('Usuário gravado com sucesso!');
     } catch (err: any) {
       showErrorFeedback(`Erro ao salvar usuário: ${err.message}`);
@@ -557,18 +564,23 @@ export const SettingsView: React.FC = () => {
   const handleDeleteUser = async (id: string) => {
     try {
       await apiFetch(`/users/profiles/${id}`, { method: 'DELETE' });
-      loadAllConfigurations();
-      showSuccessFeedback('Usuário removido com sucesso!');
+      setProfiles(prev => prev.filter(p => p.id !== id));
       setUserToDeleteId(null);
+      await loadAllConfigurations();
+      showSuccessFeedback('Usuário removido com sucesso!');
     } catch (err: any) {
+      setUserToDeleteId(null);
       showErrorFeedback(`Erro ao excluir usuário: ${err.message}`);
     }
   };
 
   const handleToggleUserStatus = async (id: string) => {
     try {
-      await apiFetch(`/users/profiles/${id}/toggle`, { method: 'PUT' });
-      loadAllConfigurations();
+      const toggled = await apiFetch<Profile>(`/users/profiles/${id}/toggle`, { method: 'PUT' });
+      if (toggled) {
+        setProfiles(prev => prev.map(p => p.id === id ? toggled : p));
+      }
+      await loadAllConfigurations();
       showSuccessFeedback('Status do usuário atualizado!');
     } catch (err: any) {
       showErrorFeedback(`Erro ao alterar status: ${err.message}`);
@@ -1644,8 +1656,8 @@ export const SettingsView: React.FC = () => {
                   {profiles.map((p) => (
                     <div key={p.id} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-amber-500 text-white font-black text-xs flex items-center justify-center">
-                          {p.first_name[0]}
+                        <div className="w-8 h-8 rounded-full bg-amber-500 text-white font-black text-xs flex items-center justify-center uppercase">
+                          {(p.first_name || p.email || 'U')[0]}
                         </div>
                         <div>
                           <p className="font-bold text-slate-900">{p.first_name} {p.last_name}</p>
@@ -1658,14 +1670,16 @@ export const SettingsView: React.FC = () => {
                           <div className="flex items-center gap-1.5 bg-red-50 p-1.5 rounded-xl border border-red-200">
                             <span className="text-red-800 font-bold text-[10px]">Excluir?</span>
                             <button
+                              type="button"
                               onClick={() => handleDeleteUser(p.id)}
-                              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[9px] transition-colors"
+                              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[9px] transition-colors cursor-pointer"
                             >
                               Sim
                             </button>
                             <button
+                              type="button"
                               onClick={() => setUserToDeleteId(null)}
-                              className="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-[9px] transition-colors"
+                              className="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-[9px] transition-colors cursor-pointer"
                             >
                               Não
                             </button>
@@ -1676,25 +1690,29 @@ export const SettingsView: React.FC = () => {
                               {p.role}
                             </span>
                             <button
+                              type="button"
                               onClick={() => handleToggleUserStatus(p.id)}
-                              className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${p.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}
+                              className={`px-2 py-0.5 rounded-full font-bold text-[10px] cursor-pointer ${p.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}
                             >
                               {p.status === 'active' ? 'Ativo' : 'Inativo'}
                             </button>
                             <button
+                              type="button"
                               onClick={() => {
-                                setEditingUser(p);
+                                setEditingUser({ ...p, password: '' } as any);
+                                setUserToDeleteId(null);
                                 setUserViewMode('FORM');
                               }}
-                              className="p-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-100"
-                              title="Editar"
+                              className="p-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-100 cursor-pointer"
+                              title="Editar Usuário"
                             >
                               <FontAwesomeIcon icon={faPenToSquare} className="w-3 h-3" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => setUserToDeleteId(p.id)}
-                              className="p-1.5 bg-white border border-slate-200 text-red-500 rounded-lg hover:bg-red-50"
-                              title="Excluir"
+                              className="p-1.5 bg-white border border-slate-200 text-red-500 rounded-lg hover:bg-red-50 cursor-pointer"
+                              title="Excluir Usuário"
                             >
                               <FontAwesomeIcon icon={faTrash} className="w-3 h-3" />
                             </button>
@@ -1816,8 +1834,8 @@ export const SettingsView: React.FC = () => {
                   <SlideSwitch
                     checked={authSettings.google_oauth_enabled}
                     onChange={(val) => setAuthSettings({ ...authSettings, google_oauth_enabled: val })}
-                    label="Login com Google (Google OAuth)"
-                    description="Exibe o botão 'Continuar com Google' na tela de login /login e no cardápio online."
+                    label="Login com Google no Cardápio Online (Google OAuth)"
+                    description="Exibe o botão 'Continuar com Google' exclusivamente no Cardápio Digital Online para clientes que desejarem se cadastrar ou entrar (não exibido no login do painel administrativo)."
                   />
                   <div className="text-[11px] text-slate-500 bg-white p-3 rounded-xl border border-slate-200">
                     <p className="font-bold text-slate-800 flex items-center gap-1.5">

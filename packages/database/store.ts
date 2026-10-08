@@ -397,6 +397,37 @@ export const StoreDB = {
     return profiles;
   },
 
+  syncFromSupabase: async () => {
+    if (!SupabaseService.isConfigured()) return false;
+    try {
+      const [dbOrgs, dbProfiles, dbUnits, dbCategories, dbProducts, dbInventory, dbOrders, dbCustomers, dbTables] = await Promise.all([
+        SupabaseService.fetchTableData<Organization>('organizations'),
+        SupabaseService.fetchProfiles(),
+        SupabaseService.fetchTableData<Unit>('units'),
+        SupabaseService.fetchTableData<Category>('categories'),
+        SupabaseService.fetchTableData<Product>('products'),
+        SupabaseService.fetchTableData<InventoryItem>('inventory_items'),
+        SupabaseService.fetchTableData<Order>('orders'),
+        SupabaseService.fetchTableData<Customer>('customers'),
+        SupabaseService.fetchTableData<TableItem>('tables'),
+      ]);
+
+      if (dbOrgs && dbOrgs.length > 0) organization = dbOrgs[0];
+      if (dbProfiles && dbProfiles.length > 0) profiles = dbProfiles;
+      if (dbUnits && dbUnits.length > 0) units = dbUnits;
+      if (dbCategories && dbCategories.length > 0) categories = dbCategories;
+      if (dbProducts && dbProducts.length > 0) products = dbProducts;
+      if (dbInventory && dbInventory.length > 0) inventoryItems = dbInventory;
+      if (dbOrders && dbOrders.length > 0) orders = dbOrders;
+      if (dbCustomers && dbCustomers.length > 0) customers = dbCustomers;
+      if (dbTables && dbTables.length > 0) tables = dbTables;
+      return true;
+    } catch (err) {
+      logger.warn('[StoreDB] Falha parcial ao sincronizar dados iniciais do Supabase:', err);
+      return false;
+    }
+  },
+
   verifyAdminLogin: async (email: string, password?: string) => {
     const cleanEmail = (email || '').trim().toLowerCase();
     if (!cleanEmail) {
@@ -405,9 +436,12 @@ export const StoreDB = {
 
     // 1. Tentar autenticação no Supabase se configurado
     if (SupabaseService.isConfigured()) {
+      await StoreDB.syncFromSupabase();
       const supabaseUser = await SupabaseService.authenticate(cleanEmail, password);
       if (supabaseUser) {
-        // Atualizar lista local de perfis
+        if (supabaseUser.status && supabaseUser.status !== 'active') {
+          throw new Error('Acesso negado: Este usuário está inativo ou suspenso.');
+        }
         const idx = profiles.findIndex(p => p.id === supabaseUser.id || p.email.toLowerCase() === cleanEmail);
         if (idx >= 0) {
           profiles[idx] = { ...profiles[idx], ...supabaseUser };
@@ -421,7 +455,7 @@ export const StoreDB = {
           warning: null,
         };
       } else {
-        throw new Error('Credenciais inválidas no Supabase Auth. Verifique seu e-mail e senha cadastrados.');
+        throw new Error('Credenciais inválidas no Supabase Auth. Apenas usuários autorizados podem acessar o painel.');
       }
     }
 
@@ -462,20 +496,20 @@ export const StoreDB = {
       throw new Error(`Já existe um usuário cadastrado com o e-mail "${cleanEmail}".`);
     }
 
-    const newId = profile.id || `user_${Date.now()}`;
+    const newId = profile.id || crypto.randomUUID();
     const newProf: Profile = {
       id: newId,
       email: cleanEmail,
-      first_name: profile.first_name || 'Novo',
-      last_name: profile.last_name || 'Usuário',
-      phone: profile.phone || '',
+      first_name: (profile.first_name || 'Novo').trim(),
+      last_name: (profile.last_name || 'Usuário').trim(),
+      phone: (profile.phone || '').trim(),
       organization_id: organization.id,
       role: profile.role || 'operator',
       status: profile.status || 'active',
       created_at: new Date().toISOString(),
     };
 
-    const pass = profile.password || 'admin123';
+    const pass = profile.password && profile.password.trim() ? profile.password.trim() : 'admin123';
     userPasswords[newId] = pass;
     userPasswords[cleanEmail] = pass;
 
@@ -489,60 +523,91 @@ export const StoreDB = {
   },
 
   updateProfile: async (id: string, data: Partial<Profile> & { password?: string }) => {
-    const p = profiles.find(pr => pr.id === id);
-    if (p) {
-      if (data.email) {
-        const cleanEmail = data.email.trim().toLowerCase();
-        if (cleanEmail !== p.email.toLowerCase()) {
-          const duplicate = profiles.find(other => other.id !== id && other.email.toLowerCase() === cleanEmail);
-          if (duplicate) {
-            throw new Error(`O e-mail "${cleanEmail}" já está em uso por outro membro.`);
-          }
-          p.email = cleanEmail;
-        }
-      }
-      if (data.first_name !== undefined) p.first_name = data.first_name;
-      if (data.last_name !== undefined) p.last_name = data.last_name;
-      if (data.phone !== undefined) p.phone = data.phone;
-      if (data.role !== undefined) p.role = data.role;
-      if (data.status !== undefined) p.status = data.status;
-
-      if (data.password) {
-        userPasswords[id] = data.password;
-        userPasswords[p.email.toLowerCase()] = data.password;
-      }
-
-      if (SupabaseService.isConfigured()) {
-        await SupabaseService.upsertProfile(p);
-      }
-
-      return p;
+    const idx = profiles.findIndex(pr => pr.id === id);
+    if (idx === -1) {
+      throw new Error('Usuário não encontrado para edição.');
     }
-    return null;
+
+    const current = profiles[idx];
+    const oldEmail = current.email.toLowerCase();
+    let updatedEmail = current.email;
+
+    if (data.email !== undefined) {
+      const cleanEmail = data.email.trim().toLowerCase();
+      if (!cleanEmail) {
+        throw new Error('O e-mail não pode ficar vazio.');
+      }
+      if (cleanEmail !== oldEmail) {
+        const duplicate = profiles.find(other => other.id !== id && other.email.toLowerCase() === cleanEmail);
+        if (duplicate) {
+          throw new Error(`O e-mail "${cleanEmail}" já está em uso por outro membro.`);
+        }
+        updatedEmail = cleanEmail;
+      }
+    }
+
+    const updatedProfile: Profile = {
+      ...current,
+      email: updatedEmail,
+      first_name: data.first_name !== undefined ? data.first_name.trim() : current.first_name,
+      last_name: data.last_name !== undefined ? data.last_name.trim() : current.last_name,
+      phone: data.phone !== undefined ? data.phone.trim() : current.phone,
+      role: data.role !== undefined ? data.role : current.role,
+      status: data.status !== undefined ? data.status : current.status,
+    };
+
+    profiles[idx] = updatedProfile;
+
+    // Preservar ou atualizar senha no mapa de credenciais
+    const currentPass = userPasswords[id] || userPasswords[oldEmail] || 'admin123';
+    const nextPass = data.password && data.password.trim() ? data.password.trim() : currentPass;
+    userPasswords[id] = nextPass;
+    userPasswords[updatedEmail.toLowerCase()] = nextPass;
+
+    if (SupabaseService.isConfigured()) {
+      await SupabaseService.upsertProfile(updatedProfile);
+    }
+
+    return updatedProfile;
   },
 
   deleteProfile: async (id: string) => {
     const userToDelete = profiles.find(p => p.id === id);
-    if (userToDelete && userToDelete.email.toLowerCase() === 'admin@admin') {
-      throw new Error('O usuário Owner Master principal (admin@admin) não pode ser excluído.');
+    if (!userToDelete) {
+      throw new Error('Usuário não localizado para exclusão.');
     }
+    if (profiles.length <= 1) {
+      throw new Error('Não é possível excluir o único usuário do sistema. Cadastre outro administrador antes de remover este.');
+    }
+    delete userPasswords[id];
+    delete userPasswords[userToDelete.email.toLowerCase()];
     profiles = profiles.filter(p => p.id !== id);
+
+    if (SupabaseService.isConfigured()) {
+      await SupabaseService.deleteProfile(id);
+    }
     return true;
   },
 
   toggleProfileStatus: async (id: string) => {
-    const p = profiles.find(pr => pr.id === id);
-    if (p) {
-      if (p.email.toLowerCase() === 'admin@admin' && p.status === 'active') {
-        throw new Error('O usuário Owner Master principal não pode ser desativado.');
+    const idx = profiles.findIndex(pr => pr.id === id);
+    if (idx !== -1) {
+      const p = profiles[idx];
+      const activeUsersCount = profiles.filter(u => u.status === 'active').length;
+      if (p.status === 'active' && activeUsersCount <= 1) {
+        throw new Error('Não é possível desativar o único usuário ativo do sistema.');
       }
-      p.status = p.status === 'active' ? 'inactive' : 'active';
+      const updated: Profile = {
+        ...p,
+        status: p.status === 'active' ? 'inactive' : 'active',
+      };
+      profiles[idx] = updated;
       if (SupabaseService.isConfigured()) {
-        await SupabaseService.upsertProfile(p);
+        await SupabaseService.upsertProfile(updated);
       }
-      return p;
+      return updated;
     }
-    return null;
+    throw new Error('Usuário não encontrado.');
   },
 
   getUnits: () => units,

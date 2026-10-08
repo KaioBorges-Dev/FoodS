@@ -168,6 +168,44 @@ class SupabaseServiceManager {
   }
 
   /**
+   * Exclui perfil no Supabase
+   */
+  public async deleteProfile(id: string): Promise<boolean> {
+    if (!this.isConfigured() || !this.client) return false;
+
+    try {
+      const { error } = await this.client.from('profiles').delete().eq('id', id);
+      if (error) {
+        logger.error('[Supabase DB] Erro ao excluir profile no Supabase:', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      logger.error('[Supabase DB] Exceção ao excluir profile no Supabase:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Remove registro de uma tabela genérica do Supabase
+   */
+  public async deleteTableData(table: string, id: string): Promise<boolean> {
+    if (!this.isConfigured() || !this.client) return false;
+
+    try {
+      const { error } = await this.client.from(table).delete().eq('id', id);
+      if (error) {
+        logger.warn(`[Supabase DB] Falha ao remover item ${id} de ${table}: ${error.message}`);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      logger.warn(`[Supabase DB] Erro ao remover item ${id} de ${table}:`, err);
+      return false;
+    }
+  }
+
+  /**
    * Busca dados de uma tabela genérica do Supabase
    */
   public async fetchTableData<T>(table: string): Promise<T[] | null> {

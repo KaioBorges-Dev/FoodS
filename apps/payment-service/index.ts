@@ -347,7 +347,6 @@ export class InfinityPayAdapter implements PaymentProviderAdapter {
       ],
       order_nsu: params.orderId,
       redirect_url: `${appUrl}/pagamento-concluido`,
-      webhook_url: `${appUrl}/api/webhooks/infinitypay`,
       customer: {
         name: params.customerName || 'Cliente FoodS',
         email: params.customerEmail || 'cliente@foods.com.br',

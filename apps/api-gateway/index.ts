@@ -117,14 +117,7 @@ apiGateway.post('/auth/admin/recover-confirm', async (req, res) => {
       return res.status(400).json(errorResponse('BAD_REQUEST', 'Preencha todos os campos obrigatórios.'));
     }
 
-    const phoneToVerify = targetPhone || emailOrPhone;
-    const isPinValid = StoreDB.verifyAdminRecoveryPin(phoneToVerify, pin_code);
-
-    if (!isPinValid.success) {
-      return res.status(400).json(errorResponse('INVALID_PIN', isPinValid.message));
-    }
-
-    // Buscar perfil correspondente
+    // Buscar perfil correspondente primeiro para obter o telefone cadastrado caso targetPhone não tenha sido enviado
     const profs = await StoreDB.getProfiles();
     const user = profs.find(
       p => p.email.toLowerCase() === emailOrPhone.trim().toLowerCase() || 
@@ -133,6 +126,13 @@ apiGateway.post('/auth/admin/recover-confirm', async (req, res) => {
 
     if (!user) {
       return res.status(404).json(errorResponse('NOT_FOUND', 'Administrador não localizado para redefinição de senha.'));
+    }
+
+    const phoneToVerify = targetPhone || user.phone || emailOrPhone;
+    const isPinValid = StoreDB.verifyAdminRecoveryPin(phoneToVerify, pin_code);
+
+    if (!isPinValid.success) {
+      return res.status(400).json(errorResponse('INVALID_PIN', isPinValid.message));
     }
 
     // Atualizar senha administrativa

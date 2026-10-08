@@ -261,7 +261,7 @@ Todas as variáveis devem ser definidas no arquivo `.env` localizado na raiz do 
 
 ---
 
-#### 5. Google OAuth 2.0 (Login Social de Funcionários e Clientes)
+#### 5. Google OAuth 2.0 (Login Social Exclusivo para Clientes no Cardápio Online)
 1. Acesse o [Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials).
 2. Crie uma credencial do tipo **ID do cliente OAuth 2.0** (Tipo de aplicativo: *Aplicativo Web*).
 3. Em **URIs de redirecionamento autorizados**, adicione:
