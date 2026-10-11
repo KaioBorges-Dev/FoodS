@@ -97,8 +97,6 @@ Para acessar o painel de gerenciamento com acesso irrestrito a todas as funciona
 
 ## 3. 📸 Demonstração Visual do Sistema (Screenshots)
 
-Configure as URLs dos arquivos `.png` das capturas de tela no arquivo `.env` ou visualize as telas principais:
-
 ### Painel Principal (Dashboard & Métricas em Tempo Real)
 ![Dashboard FoodS](https://i.imgur.com/ACdavQh.jpeg)
 
